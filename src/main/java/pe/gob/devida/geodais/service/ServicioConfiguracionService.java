@@ -17,7 +17,7 @@ public class ServicioConfiguracionService {
     }
 
     public String getUrlMapaCultivos() {
-        final String NOMBRE_SERVICIO = "CULTIVOS_PRODUCCION";
+        final String NOMBRE_SERVICIO = "CULTIVOS_PRODUCCION_GEODAIS";
         
         Servicio servicio = servicioMapper.findByNombre(NOMBRE_SERVICIO);
         
