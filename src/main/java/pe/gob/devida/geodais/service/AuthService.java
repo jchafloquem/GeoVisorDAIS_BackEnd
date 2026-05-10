@@ -66,7 +66,8 @@ public class AuthService {
         if (response != null && Boolean.TRUE.equals(response.getIsAuthenticated())) {
 
         
-            Optional<UserSession> existingSession = userSessionRepository.findByLoginAndFechaHoraSalidaIsNull(request.getLogin());
+            String loginUpper = request.getLogin() != null ? request.getLogin().toUpperCase() : null;
+            Optional<UserSession> existingSession = userSessionRepository.findByLoginAndFechaHoraSalidaIsNull(loginUpper);
 
             if (existingSession.isPresent()) {
 
@@ -80,7 +81,7 @@ public class AuthService {
             UserSession newSession = new UserSession();
 
 
-            newSession.setLogin(request.getLogin());
+            newSession.setLogin(loginUpper);
             newSession.setNombreCompleto(response.getFullName());
             newSession.setFechaHoraIngreso(LocalDateTime.now()); 
             
@@ -112,20 +113,27 @@ public class AuthService {
 	@Transactional
     public void logout(String login) {
     	
-		String uppercaseLogin = (login != null) ? login.toUpperCase() : null;
-    	logger.info("Iniciando proceso de logout para el usuario: {}", login);
+		String loginUpper = (login != null) ? login.trim().toUpperCase() : null;
+    	logger.info("Iniciando proceso de logout para el usuario: {}", loginUpper);
 
-            Optional<UserSession> activeSession = userSessionRepository.findByLoginAndFechaHoraSalidaIsNull(login);
+            Optional<UserSession> activeSession = userSessionRepository.findByLoginAndFechaHoraSalidaIsNull(loginUpper);
 
         if (activeSession.isPresent()) {
             UserSession session = activeSession.get();
     
             session.setFechaHoraSalida(java.time.LocalDateTime.now());
             userSessionRepository.save(session);
-            logger.info("Sesión cerrada exitosamente para el usuario: {}", login);
+            logger.info("Sesión cerrada exitosamente para el usuario: {}", loginUpper);
         } else {
-            logger.warn("Intento de logout de usuario sin sesión activa (posiblemente ya cerrada o no autenticado): {}", login);
+            logger.warn("Intento de logout de usuario sin sesión activa (posiblemente ya cerrada o no autenticado): {}", loginUpper);
     
         }
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isSessionActive(String login) {
+        if (login == null) return false;
+        String loginUpper = login.trim().toUpperCase();
+        return userSessionRepository.findByLoginAndFechaHoraSalidaIsNull(loginUpper).isPresent();
     }
 }
